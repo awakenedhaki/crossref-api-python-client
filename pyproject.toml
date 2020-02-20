@@ -1,9 +1,14 @@
 [tool.poetry]
-name = "crossref-api-python"
+name = "crossref-api-python-client"
 version = "0.1.0"
-description = "Python wrapper for CrossRef API"
+description = "Python wrapper for CrossRef REST API"
 authors = ["awakenedhaki <rodrigo.vallejosch@gmail.com>"]
 license = "MIT License"
+
+readme = 'README.md'
+
+repository = 'https://github.com/awakenedhaki/crossref-api-python-client'
+homepage = 'https://github.com/awakenedhaki/crossref-api-python-client'
 
 [tool.poetry.dependencies]
 python = "^3.7"
