@@ -1,23 +1,34 @@
 import json
 import requests
 
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 from uritemplate import URITemplate
 from urllib.parse import urlencode, urljoin
 
-from crossrefapiclient.utils import validate, prefix_query
+from crossrefapiclient.utils import (
+    validate,
+    prefix_query,
+    create_logger,
+    _filter_builder
+)
 
 # CONSTANTS ===================================================================
-# . CrossRef available version
+# . Crossref available version
 VERSION = 'v1'
 # . URI template for CrossRef API
 BASE = URITemplate('https://api.crossref.org/{version}/{resource}/')
 
+# LOGGING =====================================================================
+logger = create_logger(__name__)
+
 # CLASSES =====================================================================
+
+# TODO: header specification (adding mailto)
+# TODO: looking into potential request errors
 
 class MetaResource(ABCMeta):
     '''
-    Metaclass for CrossRef Resources.
+    Metaclass for Crossref Resources.
 
     Sets the `resources` attribute with __new__ constructor from class name.
     '''
@@ -26,7 +37,7 @@ class MetaResource(ABCMeta):
         return super().__new__(cls, name, bases, body)
 
 
-class Resource(metaclass=ABCMeta):
+class Resource(metaclass=MetaResource):
     '''
     Abstract class for a CrossRef Resource.
 
@@ -38,28 +49,14 @@ class Resource(metaclass=ABCMeta):
         - /licenses
         - /journals
     '''
+
     def __init__(self):
         self.url = BASE.expand({
             'version': VERSION,
             'resource': self.resource
-            })
+        })
+        logger.info(f'{self.__class__.__name__} URL has been set to {self.url}')
         self.params = {}
-
-    @abstractmethod
-    def get(self, identifier):
-        return
-
-    @abstractmethod
-    def query(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def filter(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def sort(self, **kwargs):
-        pass
 
     def execute(self):
         '''
@@ -70,18 +67,18 @@ class Resource(metaclass=ABCMeta):
         A JSON object.
         '''
         params = urlencode(self.params)
-        url = self.url + f'?{params}'
+        url = self.url + f'?{params}' if params else self.url
+
+        logger.info(f'Request being sent to {url}')
+
         with requests.get(url) as r:
+            logger.warning(f'Request status code: {r.status_code}')
+            r.raise_for_status()
             return r.json()
 
-
-class Works(Resource, metaclass=MetaResource):
-    '''
-    Python object for /works CrossRef endpoint.
-    '''
-
-    def get(self, doi):
-        self.url = urljoin(self.url, doi)
+    def get(self, identifier):
+        self.url = urljoin(self.url, f'{identifier}/')
+        logger.info(f'Identifier: {identifier}')
         return self
 
     @validate()
@@ -104,10 +101,46 @@ class Works(Resource, metaclass=MetaResource):
             'order': order
         })
 
+    def reset(self):
+        return self.__class__()
 
-def _filter_builder(**kwargs):
+    def __repr__(self):
+        attrs = ', '.join([f'{k}={v}' for k, v in vars(self).items()])
+        return f'{self.__class__.__name__}({attrs})'
+
+
+class CombinationResource(Resource):
+    def works(self):
+        self.url = urljoin(self.url, 'works/')
+        logger.info(f'Combining with /works: {self.url}')
+        return self
+
+
+class Works(Resource):
     '''
-    Formats filters into a string of comma separated parameters.
+    Python object for /works CrossRef endpoint.
     '''
-    field = [f'{filter_name}:{value}' for filter_name, value in kwargs.items()]
-    return ','.join(field)
+    pass
+
+class Funders(CombinationResource):
+    pass
+
+
+class Members(CombinationResource):
+    pass
+
+
+class Journals(CombinationResource):
+    pass
+
+
+class Licenses(CombinationResource):
+    pass
+
+
+class Types(CombinationResource):
+    pass
+
+
+class Prefixes(CombinationResource):
+    pass
