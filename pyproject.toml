@@ -16,6 +16,9 @@ requests = "^2.22.0"
 
 [tool.poetry.dev-dependencies]
 
+[tool.poetry.scripts]
+publish = 'your_project:publish'
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
