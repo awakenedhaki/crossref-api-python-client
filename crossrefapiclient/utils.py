@@ -209,7 +209,8 @@ def create_logger(name):
     # File
     file_handler = logging.FileHandler('file.log')
     file_handler.setLevel(logging.INFO)
-    file_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_format = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_format)
     logger.addHandler(file_handler)
 
@@ -220,5 +221,6 @@ def _filter_builder(**kwargs):
     '''
     Formats filters into a string of comma separated parameters.
     '''
-    field = [f'{filter_name}:{quote_plus(value)}' for filter_name, value in kwargs.items()]
+    field = [
+        f'{filter_name}:{quote_plus(value)}' for filter_name, value in kwargs.items()]
     return ','.join(field)
