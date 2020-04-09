@@ -1,4 +1,3 @@
-import json
 import requests
 
 from abc import ABCMeta
@@ -25,6 +24,7 @@ logger = create_logger(__name__)
 
 # TODO: header specification (adding mailto)
 # TODO: looking into potential request errors
+
 
 class MetaResource(ABCMeta):
     '''
@@ -55,7 +55,8 @@ class Resource(metaclass=MetaResource):
             'version': VERSION,
             'resource': self.resource
         })
-        logger.info(f'{self.__class__.__name__} URL has been set to {self.url}')
+        logger.info(
+            f'{self.__class__.__name__} URL has been set to {self.url}')
         self.params = {}
 
     def execute(self):
@@ -117,10 +118,8 @@ class CombinationResource(Resource):
 
 
 class Works(Resource):
-    '''
-    Python object for /works CrossRef endpoint.
-    '''
     pass
+
 
 class Funders(CombinationResource):
     pass
