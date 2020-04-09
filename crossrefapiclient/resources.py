@@ -50,13 +50,16 @@ class Resource(metaclass=MetaResource):
         - /journals
     '''
 
-    def __init__(self):
+    def __init__(self, debug = False):
         self.url = BASE.expand({
             'version': VERSION,
             'resource': self.resource
         })
-        logger.info(
-            f'{self.__class__.__name__} URL has been set to {self.url}')
+        self.debug = debug
+        if self.debug:
+            logger.info(
+                f'{self.__class__.__name__} URL has been set to {self.url}')
+
         self.params = {}
 
     def execute(self):
@@ -70,7 +73,8 @@ class Resource(metaclass=MetaResource):
         params = urlencode(self.params)
         url = self.url + f'?{params}' if params else self.url
 
-        logger.info(f'Request being sent to {url}')
+        if self.debug:
+            logger.info(f'Request being sent to {url}')
 
         with requests.get(url) as r:
             logger.warning(f'Request status code: {r.status_code}')
@@ -79,7 +83,8 @@ class Resource(metaclass=MetaResource):
 
     def get(self, identifier):
         self.url = urljoin(self.url, f'{identifier}/')
-        logger.info(f'Identifier: {identifier}')
+        if self.debug:
+            logger.info(f'Identifier: {identifier}')
         return self
 
     @validate()
@@ -103,7 +108,11 @@ class Resource(metaclass=MetaResource):
         })
 
     def reset(self):
-        return self.__class__()
+        self.url = BASE.expand({
+            'version': VERSION,
+            'resource': self.resource
+        })
+
 
     def __repr__(self):
         attrs = ', '.join([f'{k}={v}' for k, v in vars(self).items()])
